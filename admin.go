@@ -317,6 +317,19 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			Description: "查看測試報名的輸出結果",
 		},
 		{
+			Name:        "admin_test_summary_image",
+			Description: "輸出測試報名的表格圖片",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "day",
+					Description: "要輸出的日期",
+					Required:    true,
+					Choices:     buildDayChoices(),
+				},
+			},
+		},
+		{
 			Name:        "admin_signup_access",
 			Description: "設定玩家是否能自行報名",
 			Options: []*discordgo.ApplicationCommandOption{
@@ -451,6 +464,8 @@ func handleAdminCommand(s *discordgo.Session, i *discordgo.InteractionCreate) bo
 		handleAdminTestSignupPanelCommand(s, i)
 	case "admin_test_summary":
 		handleAdminTestSummaryCommand(s, i)
+	case "admin_test_summary_image":
+		handleAdminTestSummaryImageCommand(s, i)
 	case "admin_signup_access":
 		handleAdminSignupAccessCommand(s, i)
 	default:

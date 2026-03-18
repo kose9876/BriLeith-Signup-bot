@@ -32,6 +32,7 @@ func buildHelpText() string {
 		"/admin_revoke 移除動態管理員權限",
 		"/admin_test_signup_post 手動發送測試用報名表",
 		"/admin_test_summary 查看測試報名與分配輸出",
+		"/admin_test_summary_image 輸出測試報名的表格圖片",
 	}
 
 	return "指令說明\n\n一般玩家\n" +
