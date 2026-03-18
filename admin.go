@@ -275,22 +275,6 @@ func registerAdminCommands(dg *discordgo.Session, cfg Config) error {
 			Description: "查看測試報名的輸出結果",
 		},
 		{
-			Name:        "admin_test_signup_window",
-			Description: "測試手動開關一般玩家報名",
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionBoolean,
-					Name:        "open",
-					Description: "true 開啟，false 關閉",
-					Required:    true,
-				},
-			},
-		},
-		{
-			Name:        "admin_test_signup_close_notice",
-			Description: "測試手動發送報名關閉通知到目前 guild 的設定頻道",
-		},
-		{
 			Name:        "admin_signup_access",
 			Description: "設定玩家是否能自行報名",
 			Options: []*discordgo.ApplicationCommandOption{
@@ -432,10 +416,6 @@ func handleAdminCommand(s *discordgo.Session, i *discordgo.InteractionCreate) bo
 		handleAdminTestSignupPanelCommand(s, i)
 	case "admin_test_summary":
 		handleAdminTestSummaryCommand(s, i)
-	case "admin_test_signup_window":
-		handleAdminTestSignupWindowCommand(s, i)
-	case "admin_test_signup_close_notice":
-		handleAdminTestSignupCloseNoticePreviewCommand(s, i)
 	case "admin_signup_access":
 		handleAdminSignupAccessCommand(s, i)
 	default:
@@ -843,40 +823,6 @@ func handleAdminTestSignupPostCommand(s *discordgo.Session, i *discordgo.Interac
 		"已手動發送 %s 的報名表到目前 guild 設定頻道。",
 		getWeekRangeText(weekKey),
 	))
-}
-
-func handleAdminTestSignupWindowCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	options := i.ApplicationCommandData().Options
-	openOption := findOption(options, "open")
-	if openOption == nil {
-		respondEphemeral(s, i, "缺少必要參數。")
-		return
-	}
-
-	open := openOption.BoolValue()
-	setForcedPublicSignupOpen(open)
-
-	if open {
-		respondEphemeral(s, i, "已強制開啟一般玩家報名。")
-		return
-	}
-
-	respondEphemeral(s, i, "已強制關閉一般玩家報名。")
-}
-
-func handleAdminTestSignupCloseNoticeCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	guildID := i.GuildID
-	if guildID == "" {
-		respondEphemeral(s, i, "這個指令只能在伺服器內使用。")
-		return
-	}
-
-	if err := sendSignupClosedNoticeToChannelOrConfiguredGuild(s, guildID, i.ChannelID); err != nil {
-		respondEphemeral(s, i, "手動發送關閉通知失敗: "+err.Error())
-		return
-	}
-
-	respondEphemeral(s, i, "已手動發送報名關閉通知到目前 guild 設定頻道。")
 }
 
 func handleAdminSignupAccessCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {

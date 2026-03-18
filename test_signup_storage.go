@@ -66,7 +66,7 @@ func buildTestSignupComponents() []discordgo.MessageComponent {
 
 func buildTestSignupPanelContent(weekKey string) string {
 	return fmt.Sprintf(
-		"[測試報名] %s\n\n每一天最多 %d 人，額滿後停止該日報名。\n請選擇你要報名的日期：\n\n%s",
+		"%s 報名\n\n每一天最多 %d 人，額滿後停止該日報名。\n請選擇你要報名的日期：\n\n%s",
 		getWeekRangeText(weekKey),
 		maxSignupUsersPerDay,
 		buildTestSignupSummary(weekKey),
@@ -96,7 +96,7 @@ func toggleTestUserSignup(weekKey string, userID string, day string) {
 }
 
 func buildTestSignupSummary(weekKey string) string {
-	return buildSignupSummaryFromStore(testWeeklySignups, weekKey, "目前還沒有人測試報名。")
+	return buildSignupSummaryFromStore(testWeeklySignups, weekKey, "目前還沒有人報名。")
 }
 
 func handleAdminTestSignupPanelCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -116,7 +116,7 @@ func handleAdminTestSignupPanelCommand(s *discordgo.Session, i *discordgo.Intera
 func handleAdminTestSummaryCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	weekKey := getSignupWeekKeyAt(nowInBotLocation())
 	content := fmt.Sprintf(
-		"[測試輸出] %s\n\n測試報名摘要\n%s\n\n測試分配摘要\n%s",
+		"%s 報名摘要\n%s\n\n%s",
 		getWeekRangeText(weekKey),
 		buildTestSignupSummary(weekKey),
 		buildWeekAssignmentTextFromStore(testWeeklySignups, weekKey),
@@ -131,18 +131,5 @@ func handleAdminTestSummaryCommand(s *discordgo.Session, i *discordgo.Interactio
 	})
 	if err != nil {
 		fmt.Println("admin test summary failed:", err)
-	}
-}
-
-func handleAdminTestSignupCloseNoticePreviewCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: buildSignupClosedContent(),
-			Flags:   discordgo.MessageFlagsEphemeral,
-		},
-	})
-	if err != nil {
-		fmt.Println("admin test signup close notice failed:", err)
 	}
 }

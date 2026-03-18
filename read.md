@@ -86,8 +86,6 @@ go run .
 - `/admin_revoke`：移除動態管理員權限
 - `/admin_test_signup_post`：手動發送測試用報名表
 - `/admin_test_summary`：查看測試報名與分配輸出
-- `/admin_test_signup_window open:true|false`：強制開關一般玩家報名
-- `/admin_test_signup_close_notice`：手動發送報名關閉通知
 
 ## 注意事項
 
