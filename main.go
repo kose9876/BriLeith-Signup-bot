@@ -13,6 +13,10 @@ import (
 var appConfig Config
 
 func main() {
+	if err := ensureProjectFiles(); err != nil {
+		log.Fatal(err)
+	}
+
 	cfg := loadConfig()
 	appConfig = cfg
 

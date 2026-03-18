@@ -14,16 +14,8 @@ func sortUserDays(days []string) {
 }
 
 func loadSignups() {
-	data, err := os.ReadFile("signups.json")
-	if err != nil {
+	if err := readJSONFile("signups.json", &weeklySignups); err != nil {
 		fmt.Println("讀取 signups.json 失敗，將使用空資料:", err)
-		weeklySignups = map[string]map[string][]string{}
-		return
-	}
-
-	err = json.Unmarshal(data, &weeklySignups)
-	if err != nil {
-		fmt.Println("解析 signups.json 失敗，將使用空資料:", err)
 		weeklySignups = map[string]map[string][]string{}
 		return
 	}

@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
-	"os"
 )
 
 type Config struct {
@@ -15,15 +13,10 @@ type Config struct {
 }
 
 func loadConfig() Config {
-	data, err := os.ReadFile("config.json")
+	var cfg Config
+	err := readJSONFile(configFile, &cfg)
 	if err != nil {
 		log.Fatal("讀取 config.json 失敗:", err)
-	}
-
-	var cfg Config
-	err = json.Unmarshal(data, &cfg)
-	if err != nil {
-		log.Fatal("解析 config.json 失敗:", err)
 	}
 
 	if cfg.Token == "" {

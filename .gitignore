@@ -2,3 +2,7 @@ config.json
 profiles.json
 signups.json
 test_signups.json
+admin_state.json
+signup_schedule_state.json
+*.exe
+.gocache/

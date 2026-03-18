@@ -13,13 +13,7 @@ const testSignupsFile = "test_signups.json"
 var testWeeklySignups = map[string]map[string][]string{}
 
 func loadTestSignups() {
-	data, err := os.ReadFile(testSignupsFile)
-	if err != nil {
-		testWeeklySignups = map[string]map[string][]string{}
-		return
-	}
-
-	if err := json.Unmarshal(data, &testWeeklySignups); err != nil {
+	if err := readJSONFile(testSignupsFile, &testWeeklySignups); err != nil {
 		fmt.Println("load test_signups.json failed:", err)
 		testWeeklySignups = map[string]map[string][]string{}
 		return

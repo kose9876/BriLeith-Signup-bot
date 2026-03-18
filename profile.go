@@ -79,15 +79,8 @@ func getGroupLabel(group string) string {
 }
 
 func loadProfiles() {
-	data, err := os.ReadFile("profiles.json")
-	if err != nil {
+	if err := readJSONFile("profiles.json", &userProfiles); err != nil {
 		fmt.Println("load profiles.json failed:", err)
-		userProfiles = map[string]UserProfile{}
-		return
-	}
-
-	if err := json.Unmarshal(data, &userProfiles); err != nil {
-		fmt.Println("unmarshal profiles.json failed:", err)
 		userProfiles = map[string]UserProfile{}
 		return
 	}

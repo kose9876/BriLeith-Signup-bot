@@ -10,21 +10,16 @@ import (
 )
 
 type SignupState struct {
-	ForcedPublicSignupOpen bool `json:"forced_public_signup_open"`
+	ForcedPublicSignupOpen *bool `json:"forced_public_signup_open,omitempty"`
 }
 
 var signupState = SignupState{}
 
 func loadSignupScheduleState() {
-	data, err := os.ReadFile("signup_schedule_state.json")
-	if err != nil {
-		signupState = SignupState{}
-		return
-	}
-
-	if err := json.Unmarshal(data, &signupState); err != nil {
+	if err := readJSONFile("signup_schedule_state.json", &signupState); err != nil {
 		fmt.Println("load signup_schedule_state.json failed:", err)
 		signupState = SignupState{}
+		return
 	}
 }
 
@@ -78,7 +73,11 @@ func getManagedSignupWeekKey() string {
 }
 
 func isPublicSignupOpen() bool {
-	return true
+	if signupState.ForcedPublicSignupOpen == nil {
+		return true
+	}
+
+	return *signupState.ForcedPublicSignupOpen
 }
 
 func canUserManageSignup(userID string) bool {
@@ -86,7 +85,7 @@ func canUserManageSignup(userID string) bool {
 }
 
 func setForcedPublicSignupOpen(open bool) {
-	signupState.ForcedPublicSignupOpen = open
+	signupState.ForcedPublicSignupOpen = &open
 	saveSignupScheduleState()
 }
 

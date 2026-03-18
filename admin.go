@@ -21,17 +21,7 @@ var adminState = AdminState{
 }
 
 func loadAdminState() {
-	data, err := os.ReadFile("admin_state.json")
-	if err != nil {
-		adminState = AdminState{
-			AdminUsers:         map[string]bool{},
-			BlockedSignupUsers: map[string]bool{},
-		}
-		return
-	}
-
-	err = json.Unmarshal(data, &adminState)
-	if err != nil {
+	if err := readJSONFile("admin_state.json", &adminState); err != nil {
 		fmt.Println("讀取 admin_state.json 失敗:", err)
 		adminState = AdminState{
 			AdminUsers:         map[string]bool{},
