@@ -90,7 +90,5 @@ go run .
 - `/admin_test_signup_close_notice`：手動發送報名關閉通知
 
 ## 注意事項
-
-- `config.json` 不應提交到 GitHub。
 - 若你用 Windows 編輯 JSON，專案目前可容忍 UTF-8 BOM，不會因此讀取失敗。
 - 如果 Slash Command 沒有更新，請確認 Bot 有在 `guild_ids` 指定的伺服器內，並重新啟動程式。
