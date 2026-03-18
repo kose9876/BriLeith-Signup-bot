@@ -73,20 +73,28 @@ func buildDayAssignmentText(weekKey string, dayKey string) string {
 }
 
 func buildSummaryComponents() []discordgo.MessageComponent {
+	return buildSummaryComponentsWithPrefix("summary_")
+}
+
+func buildTestSummaryComponents() []discordgo.MessageComponent {
+	return buildSummaryComponentsWithPrefix("test_summary_")
+}
+
+func buildSummaryComponentsWithPrefix(prefix string) []discordgo.MessageComponent {
 	return []discordgo.MessageComponent{
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
-				discordgo.Button{Label: "周一", Style: discordgo.PrimaryButton, CustomID: "summary_day_mon"},
-				discordgo.Button{Label: "周二", Style: discordgo.PrimaryButton, CustomID: "summary_day_tue"},
-				discordgo.Button{Label: "周三", Style: discordgo.PrimaryButton, CustomID: "summary_day_wed"},
-				discordgo.Button{Label: "周四", Style: discordgo.PrimaryButton, CustomID: "summary_day_thu"},
-				discordgo.Button{Label: "周五", Style: discordgo.PrimaryButton, CustomID: "summary_day_fri"},
+				discordgo.Button{Label: "周一", Style: discordgo.PrimaryButton, CustomID: prefix + "day_mon"},
+				discordgo.Button{Label: "周二", Style: discordgo.PrimaryButton, CustomID: prefix + "day_tue"},
+				discordgo.Button{Label: "周三", Style: discordgo.PrimaryButton, CustomID: prefix + "day_wed"},
+				discordgo.Button{Label: "周四", Style: discordgo.PrimaryButton, CustomID: prefix + "day_thu"},
+				discordgo.Button{Label: "周五", Style: discordgo.PrimaryButton, CustomID: prefix + "day_fri"},
 			},
 		},
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
-				discordgo.Button{Label: "周六", Style: discordgo.SuccessButton, CustomID: "summary_day_sat"},
-				discordgo.Button{Label: "周日", Style: discordgo.SuccessButton, CustomID: "summary_day_sun"},
+				discordgo.Button{Label: "周六", Style: discordgo.SuccessButton, CustomID: prefix + "day_sat"},
+				discordgo.Button{Label: "周日", Style: discordgo.SuccessButton, CustomID: prefix + "day_sun"},
 			},
 		},
 	}

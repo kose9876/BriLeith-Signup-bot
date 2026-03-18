@@ -66,7 +66,11 @@ func isSignupBlocked(userID string) bool {
 }
 
 func registerAdminCommands(dg *discordgo.Session, cfg Config) error {
-	commands := []*discordgo.ApplicationCommand{
+	return registerCommands(dg, cfg, buildAdminCommands())
+}
+
+func buildAdminCommands() []*discordgo.ApplicationCommand {
+	return []*discordgo.ApplicationCommand{
 		{
 			Name:        "admin_profile",
 			Description: "查看指定玩家的 profile 與報名資訊",
@@ -293,17 +297,6 @@ func registerAdminCommands(dg *discordgo.Session, cfg Config) error {
 			},
 		},
 	}
-
-	for _, guildID := range cfg.GuildIDs {
-		for _, command := range commands {
-			_, err := dg.ApplicationCommandCreate(cfg.ApplicationID, guildID, command)
-			if err != nil {
-				return fmt.Errorf("guild %s command %s: %w", guildID, command.Name, err)
-			}
-		}
-	}
-
-	return nil
 }
 
 func buildRoleChoices(includeNone bool) []*discordgo.ApplicationCommandOptionChoice {

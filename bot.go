@@ -196,6 +196,8 @@ func handleMessageComponent(s *discordgo.Session, i *discordgo.InteractionCreate
 		handleCapeComponent(s, i, customID)
 	case strings.HasPrefix(customID, "summary_"):
 		handleSummaryComponent(s, i, customID)
+	case strings.HasPrefix(customID, "test_summary_"):
+		handleTestSummaryComponent(s, i, customID)
 	case strings.HasPrefix(customID, "test_day_"):
 		handleTestSignupComponent(s, i, customID)
 	case strings.HasPrefix(customID, "day_"):
@@ -277,6 +279,22 @@ func handleSummaryComponent(s *discordgo.Session, i *discordgo.InteractionCreate
 	})
 	if err != nil {
 		fmt.Println("summary detail failed:", err)
+	}
+}
+
+func handleTestSummaryComponent(s *discordgo.Session, i *discordgo.InteractionCreate, customID string) {
+	weekKey := getSignupWeekKeyAt(nowInBotLocation())
+	dayKey := strings.TrimPrefix(customID, "test_summary_")
+	content := buildFullDaySummaryTextFromStore(testWeeklySignups, weekKey, dayKey)
+
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: content,
+		},
+	})
+	if err != nil {
+		fmt.Println("test summary detail failed:", err)
 	}
 }
 

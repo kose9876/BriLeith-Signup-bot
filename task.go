@@ -185,7 +185,11 @@ func buildDayBossSummaryText(weekKey string, dayKey string) string {
 		buildBoss1TaskText(day)
 }
 func buildFullDaySummaryText(weekKey string, dayKey string) string {
-	assignment := buildWeekAssignment(weekKey)
+	return buildFullDaySummaryTextFromStore(weeklySignups, weekKey, dayKey)
+}
+
+func buildFullDaySummaryTextFromStore(signups map[string]map[string][]string, weekKey string, dayKey string) string {
+	assignment := buildWeekAssignmentFromStore(signups, weekKey)
 	day := assignment.Days[dayKey]
 
 	dayNames := map[string]string{

@@ -115,18 +115,13 @@ func handleAdminTestSignupPanelCommand(s *discordgo.Session, i *discordgo.Intera
 
 func handleAdminTestSummaryCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	weekKey := getSignupWeekKeyAt(nowInBotLocation())
-	content := fmt.Sprintf(
-		"%s 報名摘要\n%s\n\n%s",
-		getWeekRangeText(weekKey),
-		buildTestSignupSummary(weekKey),
-		buildWeekAssignmentTextFromStore(testWeeklySignups, weekKey),
-	)
+	content := getWeekRangeText(weekKey) + " 分配摘要\n\n請選擇要查看的日期。"
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: content,
-			Flags:   discordgo.MessageFlagsEphemeral,
+			Content:    content,
+			Components: buildTestSummaryComponents(),
 		},
 	})
 	if err != nil {

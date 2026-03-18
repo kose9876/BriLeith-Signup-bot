@@ -50,6 +50,11 @@ func main() {
 		log.Fatal("註冊 admin slash command 失敗:", err)
 	}
 
+	err = removeObsoleteCommands(dg, cfg)
+	if err != nil {
+		log.Fatal("清理過期 slash command 失敗:", err)
+	}
+
 	fmt.Println("Discord Bot 已啟動，按 Ctrl+C 結束")
 
 	stop := make(chan os.Signal, 1)
@@ -60,7 +65,11 @@ func main() {
 }
 
 func registerBaseCommands(dg *discordgo.Session, cfg Config) error {
-	commands := []*discordgo.ApplicationCommand{
+	return registerCommands(dg, cfg, buildBaseCommands())
+}
+
+func buildBaseCommands() []*discordgo.ApplicationCommand {
+	return []*discordgo.ApplicationCommand{
 		{
 			Name:        "setgamename",
 			Description: "設定自己的遊戲名稱",
@@ -102,12 +111,43 @@ func registerBaseCommands(dg *discordgo.Session, cfg Config) error {
 			Description: "查看指令說明",
 		},
 	}
+}
 
+func registerCommands(dg *discordgo.Session, cfg Config, commands []*discordgo.ApplicationCommand) error {
 	for _, guildID := range cfg.GuildIDs {
 		for _, command := range commands {
 			_, err := dg.ApplicationCommandCreate(cfg.ApplicationID, guildID, command)
 			if err != nil {
 				return fmt.Errorf("guild %s command %s: %w", guildID, command.Name, err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func removeObsoleteCommands(dg *discordgo.Session, cfg Config) error {
+	allowed := map[string]bool{}
+	for _, command := range buildBaseCommands() {
+		allowed[command.Name] = true
+	}
+	for _, command := range buildAdminCommands() {
+		allowed[command.Name] = true
+	}
+
+	for _, guildID := range cfg.GuildIDs {
+		commands, err := dg.ApplicationCommands(cfg.ApplicationID, guildID)
+		if err != nil {
+			return fmt.Errorf("guild %s list commands: %w", guildID, err)
+		}
+
+		for _, command := range commands {
+			if allowed[command.Name] {
+				continue
+			}
+
+			if err := dg.ApplicationCommandDelete(cfg.ApplicationID, guildID, command.ID); err != nil {
+				return fmt.Errorf("guild %s delete command %s: %w", guildID, command.Name, err)
 			}
 		}
 	}
