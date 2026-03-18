@@ -46,7 +46,7 @@ func main() {
 		log.Fatal("註冊 admin slash command 失敗:", err)
 	}
 
-	fmt.Println("Bot 已啟動，按 Ctrl+C 結束")
+	fmt.Println("Discord Bot 已啟動，按 Ctrl+C 結束")
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
