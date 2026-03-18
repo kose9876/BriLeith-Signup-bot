@@ -6,29 +6,11 @@ import (
 )
 
 func getCurrentWeekKey() string {
-	now := time.Now()
-	weekday := int(now.Weekday())
-
-	if weekday == 0 {
-		weekday = 7
-	}
-
-	monday := now.AddDate(0, 0, -(weekday - 1))
-	return monday.Format("2006-01-02")
+	return getCurrentWeekKeyAt(nowInBotLocation())
 }
 
 func getSignupWeekKey() string {
-	now := time.Now()
-	weekday := int(now.Weekday())
-
-	if weekday == 0 {
-		weekday = 7
-	}
-
-	thisMonday := now.AddDate(0, 0, -(weekday - 1))
-	nextMonday := thisMonday.AddDate(0, 0, 7)
-
-	return nextMonday.Format("2006-01-02")
+	return getSignupWeekKeyAt(nowInBotLocation())
 }
 
 func getWeekRangeText(weekKey string) string {

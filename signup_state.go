@@ -61,11 +61,14 @@ func getCurrentWeekKeyAt(now time.Time) string {
 func getSignupWeekKeyAt(now time.Time) string {
 	weekday := int(now.Weekday())
 	if weekday == 0 {
+		if now.Hour() >= 18 {
+			return now.AddDate(0, 0, 1).Format("2006-01-02")
+		}
 		weekday = 7
 	}
 
 	thisMonday := now.AddDate(0, 0, -(weekday - 1))
-	return thisMonday.AddDate(0, 0, 7).Format("2006-01-02")
+	return thisMonday.Format("2006-01-02")
 }
 
 func getManagedSignupWeekKey() string {
@@ -82,6 +85,10 @@ func isPublicSignupOpen() bool {
 
 func canUserManageSignup(userID string) bool {
 	return isAdminUser(userID) || isPublicSignupOpen()
+}
+
+func canUserOpenSignupPanel(userID string) bool {
+	return isAdminUser(userID)
 }
 
 func setForcedPublicSignupOpen(open bool) {

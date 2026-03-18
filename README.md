@@ -81,6 +81,8 @@ go run .
 - `/admin_removeplayer`：移除玩家，可選是否刪除本週報名
 - `/admin_signup`：手動幫玩家報名某一天
 - `/admin_unsignup`：手動取消玩家某一天報名
+- `/admin_test_signup`：手動幫玩家加入測試報名某一天
+- `/admin_test_unsignup`：手動取消玩家某一天的測試報名
 - `/admin_signup_access`：設定玩家能否自行報名
 - `/admin_grant`：將已註冊玩家加入管理員
 - `/admin_revoke`：移除動態管理員權限

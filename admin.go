@@ -271,6 +271,44 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
+			Name:        "admin_test_signup",
+			Description: "手動幫指定玩家加入測試報名某一天",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "user",
+					Description: "要代報名的玩家",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "day",
+					Description: "要報名的日期",
+					Required:    true,
+					Choices:     buildDayChoices(),
+				},
+			},
+		},
+		{
+			Name:        "admin_test_unsignup",
+			Description: "手動取消指定玩家某一天的測試報名",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "user",
+					Description: "要取消報名的玩家",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "day",
+					Description: "要取消的日期",
+					Required:    true,
+					Choices:     buildDayChoices(),
+				},
+			},
+		},
+		{
 			Name:        "admin_test_signup_post",
 			Description: "測試手動發送報名表到目前 guild 的設定頻道",
 		},
@@ -405,6 +443,10 @@ func handleAdminCommand(s *discordgo.Session, i *discordgo.InteractionCreate) bo
 		handleAdminSignupCommand(s, i)
 	case "admin_unsignup":
 		handleAdminUnsignupCommand(s, i)
+	case "admin_test_signup":
+		handleAdminTestSignupCommand(s, i)
+	case "admin_test_unsignup":
+		handleAdminTestUnsignupCommand(s, i)
 	case "admin_test_signup_post":
 		handleAdminTestSignupPanelCommand(s, i)
 	case "admin_test_summary":

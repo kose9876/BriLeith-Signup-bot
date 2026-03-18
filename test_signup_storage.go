@@ -128,3 +128,92 @@ func handleAdminTestSummaryCommand(s *discordgo.Session, i *discordgo.Interactio
 		fmt.Println("admin test summary failed:", err)
 	}
 }
+
+func handleAdminTestSignupCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	options := i.ApplicationCommandData().Options
+
+	userOption := findOption(options, "user")
+	dayOption := findOption(options, "day")
+	if userOption == nil || dayOption == nil {
+		respondEphemeral(s, i, "缺少必要參數。")
+		return
+	}
+
+	user := userOption.UserValue(s)
+	day := dayOption.StringValue()
+
+	addTestUserSignupDay(getManagedSignupWeekKey(), user.ID, day)
+
+	respondEphemeral(s, i, fmt.Sprintf(
+		"已幫 <@%s> 手動加入測試報名 %s。",
+		user.ID,
+		getDayLabel(day),
+	))
+}
+
+func handleAdminTestUnsignupCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	options := i.ApplicationCommandData().Options
+
+	userOption := findOption(options, "user")
+	dayOption := findOption(options, "day")
+	if userOption == nil || dayOption == nil {
+		respondEphemeral(s, i, "缺少必要參數。")
+		return
+	}
+
+	user := userOption.UserValue(s)
+	day := dayOption.StringValue()
+
+	if !removeTestUserSignupDay(getManagedSignupWeekKey(), user.ID, day) {
+		respondEphemeral(s, i, fmt.Sprintf(
+			"<@%s> 本週測試報名沒有 %s。",
+			user.ID,
+			getDayLabel(day),
+		))
+		return
+	}
+
+	respondEphemeral(s, i, fmt.Sprintf(
+		"已幫 <@%s> 取消測試報名 %s。",
+		user.ID,
+		getDayLabel(day),
+	))
+}
+
+func addTestUserSignupDay(weekKey string, userID string, day string) {
+	if testWeeklySignups[weekKey] == nil {
+		testWeeklySignups[weekKey] = map[string][]string{}
+	}
+
+	for _, existingDay := range testWeeklySignups[weekKey][userID] {
+		if existingDay == day {
+			return
+		}
+	}
+
+	testWeeklySignups[weekKey][userID] = append(testWeeklySignups[weekKey][userID], day)
+	sortUserDays(testWeeklySignups[weekKey][userID])
+	saveTestSignups()
+}
+
+func removeTestUserSignupDay(weekKey string, userID string, day string) bool {
+	if testWeeklySignups[weekKey] == nil {
+		return false
+	}
+
+	days := testWeeklySignups[weekKey][userID]
+	for idx, existingDay := range days {
+		if existingDay != day {
+			continue
+		}
+
+		testWeeklySignups[weekKey][userID] = append(days[:idx], days[idx+1:]...)
+		if len(testWeeklySignups[weekKey][userID]) == 0 {
+			delete(testWeeklySignups[weekKey], userID)
+		}
+		saveTestSignups()
+		return true
+	}
+
+	return false
+}

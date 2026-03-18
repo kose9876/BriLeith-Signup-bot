@@ -84,8 +84,8 @@ func handleApplicationCommand(s *discordgo.Session, i *discordgo.InteractionCrea
 
 func handleSignupCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	userID := i.Member.User.ID
-	if !canUserManageSignup(userID) {
-		respondEphemeral(s, i, "目前不可報名。")
+	if !canUserOpenSignupPanel(userID) {
+		respondEphemeral(s, i, "只有管理員可以開啟報名表。")
 		return
 	}
 
