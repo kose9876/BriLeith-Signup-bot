@@ -119,7 +119,7 @@ func buildSummaryImageDataFromStore(signups map[string]map[string][]string, week
 	day := assignment.Days[dayKey]
 	boss1 := assignBoss1(day, map[string][]string{})
 	boss2 := assignBoss2Group(day, map[string][]string{})
-	boss3 := assignBoss3(day, map[string][]string{})
+	boss3 := buildFormalBoss3Assignments(weekKey, dayKey)
 
 	return buildSummaryImageDataFromAssignments(weekKey, dayKey, day, boss1, boss2, boss3)
 }

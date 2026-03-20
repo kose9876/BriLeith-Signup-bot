@@ -57,6 +57,10 @@ func handleAdminCommand(s *discordgo.Session, i *discordgo.InteractionCreate) bo
 		handleAdminTesterRevokeCommand(s, i)
 	case "a_signup":
 		handleAdminSignupCommand(s, i)
+	case "a_boss3_assign":
+		handleAdminBoss3AssignCommand(s, i)
+	case "a_boss3_clear":
+		handleAdminBoss3ClearCommand(s, i)
 	case "a_unsignup":
 		handleAdminUnsignupCommand(s, i)
 	case "t_signup":

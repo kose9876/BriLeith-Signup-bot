@@ -67,10 +67,28 @@ func buildTestBoss3Assignments(weekKey string, dayKey string) []WorkAssignment {
 		return assignments
 	}
 
-	return applyBoss3AssignmentOverrides(weekKey, dayKey, assignments, overrides[dayKey])
+	return applyBoss3AssignmentOverridesWithStore(
+		testBoss3Assignments,
+		saveTestBoss3Assignments,
+		func(userID string) bool {
+			return userAssignedToTestDay(weekKey, dayKey, userID)
+		},
+		weekKey,
+		dayKey,
+		assignments,
+		overrides[dayKey],
+	)
 }
 
-func applyBoss3AssignmentOverrides(weekKey string, dayKey string, assignments []WorkAssignment, overrides map[string]string) []WorkAssignment {
+func applyBoss3AssignmentOverridesWithStore(
+	overrideStore map[string]map[string]map[string]string,
+	save func(),
+	isAssigned func(string) bool,
+	weekKey string,
+	dayKey string,
+	assignments []WorkAssignment,
+	overrides map[string]string,
+) []WorkAssignment {
 	if len(overrides) == 0 {
 		return assignments
 	}
@@ -81,12 +99,12 @@ func applyBoss3AssignmentOverrides(weekKey string, dayKey string, assignments []
 		mode, userID := decodeBoss3Override(rawValue)
 		taskIndex := indexOfBoss3Assignment(result, taskLabel)
 		if taskIndex == -1 {
-			delete(testBoss3Assignments[weekKey][dayKey], taskLabel)
+			delete(overrideStore[weekKey][dayKey], taskLabel)
 			dirty = true
 			continue
 		}
-		if userID != "" && !userAssignedToTestDay(weekKey, dayKey, userID) {
-			delete(testBoss3Assignments[weekKey][dayKey], taskLabel)
+		if userID != "" && !isAssigned(userID) {
+			delete(overrideStore[weekKey][dayKey], taskLabel)
 			dirty = true
 			continue
 		}
@@ -126,7 +144,7 @@ func applyBoss3AssignmentOverrides(weekKey string, dayKey string, assignments []
 	}
 
 	if dirty {
-		saveTestBoss3Assignments()
+		save()
 	}
 
 	return result

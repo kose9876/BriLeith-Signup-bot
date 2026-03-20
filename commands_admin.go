@@ -237,6 +237,59 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
+			Name:        "a_boss3_assign",
+			Description: "手動調整正式版三王工作分配",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "day",
+					Description: "要調整的日期",
+					Required:    true,
+					Choices:     buildDayChoices(),
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "task",
+					Description: "三王工作名稱",
+					Required:    true,
+					Choices:     buildBoss3TaskChoices(),
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "mode",
+					Description: "調整方式",
+					Required:    true,
+					Choices:     buildBoss3OverrideModeChoices(),
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "player",
+					Description: "玩家 ID、@mention、遊戲名或顯示名",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "a_boss3_clear",
+			Description: "清除正式版三王工作分配覆寫",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "day",
+					Description: "要調整的日期",
+					Required:    true,
+					Choices:     buildDayChoices(),
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "task",
+					Description: "三王工作名稱",
+					Required:    true,
+					Choices:     buildBoss3TaskChoices(),
+				},
+			},
+		},
+		{
 			Name:        "t_signup",
 			Description: "手動幫指定玩家加入測試報名某一天",
 			Options: []*discordgo.ApplicationCommandOption{

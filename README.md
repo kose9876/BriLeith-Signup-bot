@@ -52,6 +52,7 @@ go run .
 
 - `profiles.json`
 - `signups.json`
+- `boss3_assignments.json`
 - `test_signups.json`
 - `admin_state.json`
 - `signup_schedule_state.json`
@@ -89,6 +90,8 @@ go run .
 - `/a_removeplayer player:<玩家>`：移除玩家，可選是否刪除本週報名
 - `/a_signup player:<玩家> day:<日期>`：手動幫玩家報名某一天
 - `/a_unsignup player:<玩家> day:<日期>`：手動取消玩家某一天報名
+- `/a_boss3_assign day:<日期> task:<工作> mode:<換位|追加兼任> player:<玩家>`：手動調整正式版三王工作分配
+- `/a_boss3_clear day:<日期> task:<工作>`：清除正式版三王工作分配覆寫
 - `/a_signup_access player:<玩家> blocked:<true|false>`：設定玩家能否自行報名
 - `/a_grant player:<玩家>`：將已註冊玩家加入管理員
 - `/a_grant_tester player:<玩家>`：將已註冊玩家加入測試員
@@ -128,6 +131,13 @@ go run .
 - `mode:換位` 會與原本工作的人交換
 - `mode:追加兼任` 會讓同一位玩家同時兼任多個三王工作
 - 覆寫資料會存到 `test_boss3_assignments.json`
+
+### 正式版三王手動分配
+
+- `/a_boss3_assign` 與 `/a_boss3_clear` 會直接影響正式版摘要與正式版圖片
+- `/summary` 與 `/a_summary_image` 會讀取同一份正式版三王工作覆寫紀錄
+- 若玩家已不在該日期正式名單，過期覆寫會自動失效並清除
+- 覆寫資料會存到 `boss3_assignments.json`
 
 ## 注意事項
 - 若你用 Windows 編輯 JSON，專案目前可容忍 UTF-8 BOM，不會因此讀取失敗。

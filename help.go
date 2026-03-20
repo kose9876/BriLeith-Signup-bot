@@ -24,6 +24,8 @@ func buildHelpText() string {
 		"/a_removeplayer 移除玩家，可選是否刪除本週報名",
 		"/a_signup 手動幫玩家報名某一天",
 		"/a_unsignup 手動取消玩家某一天報名",
+		"/a_boss3_assign 手動調整正式版三王工作分配",
+		"/a_boss3_clear 清除正式版三王工作分配覆寫",
 		"/a_signup_access 設定玩家能否自行報名",
 		"/a_grant 將已註冊玩家加入管理員",
 		"/a_grant_tester 將已註冊玩家加入測試員",

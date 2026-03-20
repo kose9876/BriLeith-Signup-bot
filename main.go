@@ -21,6 +21,7 @@ func main() {
 	appConfig = cfg
 
 	loadSignups()
+	loadBoss3Assignments()
 	loadTestSignups()
 	loadTestBoss3Assignments()
 	loadProfiles()
