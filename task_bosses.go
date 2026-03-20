@@ -156,6 +156,7 @@ func getBoss3Tasks(day DayAssignment) []string {
 		totalCount++
 	}
 
+	fortyPercentTask := "40%刻印、黃道、支援箭"
 	tasks := []string{
 		"狀態支援",
 	}
@@ -170,8 +171,18 @@ func getBoss3Tasks(day DayAssignment) []string {
 	tasks = append(tasks,
 		"鉤拳、貓蒼",
 		"80%刻印、鯨魚",
-		"40%刻印、黃道、支援箭",
 	)
+
+	if totalCount < 8 {
+		smokeIndex := 2
+		if smokeIndex >= len(tasks) {
+			smokeIndex = len(tasks) - 1
+		}
+		tasks[smokeIndex] = tasks[smokeIndex] + "、" + fortyPercentTask
+		return tasks
+	}
+
+	tasks = append(tasks, fortyPercentTask)
 
 	return tasks
 }
