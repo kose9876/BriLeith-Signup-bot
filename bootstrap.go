@@ -19,8 +19,10 @@ func ensureProjectFiles() error {
 		{path: "profiles.json", content: map[string]UserProfile{}},
 		{path: "signups.json", content: map[string]map[string][]string{}},
 		{path: "test_signups.json", content: map[string]map[string][]string{}},
+		{path: testBoss3AssignmentsFile, content: map[string]map[string]map[string]string{}},
 		{path: "admin_state.json", content: AdminState{
 			AdminUsers:         map[string]bool{},
+			TesterUsers:        map[string]bool{},
 			BlockedSignupUsers: map[string]bool{},
 		}},
 		{path: "signup_schedule_state.json", content: SignupState{}},

@@ -4,7 +4,10 @@ import "strings"
 
 func buildBoss1TaskText(day DayAssignment) string {
 	assignments := assignBoss1(day, map[string][]string{})
+	return buildBoss1TaskTextFromAssignments(assignments)
+}
 
+func buildBoss1TaskTextFromAssignments(assignments []WorkAssignment) string {
 	var lines []string
 	lines = append(lines, "1王")
 
@@ -13,6 +16,16 @@ func buildBoss1TaskText(day DayAssignment) string {
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func buildTestFullDaySummaryText(weekKey string, dayKey string) string {
+	assignment := buildWeekAssignmentFromStore(testWeeklySignups, weekKey)
+	day := assignment.Days[dayKey]
+	boss1Assignments := assignBoss1(day, map[string][]string{})
+	boss2Assignments := assignBoss2Group(day, map[string][]string{})
+	boss3Assignments := buildTestBoss3Assignments(weekKey, dayKey)
+
+	return buildFullDaySummaryTextWithAssignments(weekKey, dayKey, day, boss1Assignments, boss2Assignments, boss3Assignments)
 }
 
 func buildDayBossSummaryText(weekKey string, dayKey string) string {
@@ -42,7 +55,14 @@ func buildFullDaySummaryText(weekKey string, dayKey string) string {
 func buildFullDaySummaryTextFromStore(signups map[string]map[string][]string, weekKey string, dayKey string) string {
 	assignment := buildWeekAssignmentFromStore(signups, weekKey)
 	day := assignment.Days[dayKey]
+	boss1Assignments := assignBoss1(day, map[string][]string{})
+	boss2Assignments := assignBoss2Group(day, map[string][]string{})
+	boss3Assignments := assignBoss3(day, map[string][]string{})
 
+	return buildFullDaySummaryTextWithAssignments(weekKey, dayKey, day, boss1Assignments, boss2Assignments, boss3Assignments)
+}
+
+func buildFullDaySummaryTextWithAssignments(weekKey string, dayKey string, day DayAssignment, boss1Assignments []WorkAssignment, boss2Assignments []GroupAssignment, boss3Assignments []WorkAssignment) string {
 	dayNames := map[string]string{
 		"day_mon": "周一",
 		"day_tue": "周二",
@@ -65,9 +85,9 @@ func buildFullDaySummaryTextFromStore(signups map[string]map[string][]string, we
 		dpsText = strings.Join(dpsNames, "、")
 	}
 
-	boss1Text := buildBoss1TaskText(day)
-	boss2Text := buildBoss2TaskText(day)
-	boss3Text := buildBoss3TaskText(day)
+	boss1Text := buildBoss1TaskTextFromAssignments(boss1Assignments)
+	boss2Text := buildBoss2TaskTextFromAssignments(boss2Assignments)
+	boss3Text := buildBoss3TaskTextFromAssignments(boss3Assignments)
 
 	return getWeekRangeText(weekKey) + " " + dayNames[dayKey] + "（" + dayDateText + "）分配總覽\n\n" +
 		"隊伍配置\n" +
@@ -81,7 +101,10 @@ func buildFullDaySummaryTextFromStore(signups map[string]map[string][]string, we
 
 func buildBoss2TaskText(day DayAssignment) string {
 	assignments := assignBoss2Group(day, map[string][]string{})
+	return buildBoss2TaskTextFromAssignments(assignments)
+}
 
+func buildBoss2TaskTextFromAssignments(assignments []GroupAssignment) string {
 	var lines []string
 	lines = append(lines, "2王")
 
@@ -94,13 +117,28 @@ func buildBoss2TaskText(day DayAssignment) string {
 
 func buildBoss3TaskText(day DayAssignment) string {
 	assignments := assignBoss3(day, map[string][]string{})
+	return buildBoss3TaskTextFromAssignments(assignments)
+}
 
+func buildBoss3TaskTextFromAssignments(assignments []WorkAssignment) string {
 	var lines []string
 	lines = append(lines, "3王")
 
 	for _, assignment := range assignments {
-		lines = append(lines, assignment.Label+"："+assignment.Assignee)
+		lines = append(lines, assignment.Label+"："+formatWorkAssignmentAssignees(assignment))
 	}
 
 	return strings.Join(lines, "\n")
+}
+
+func formatWorkAssignmentAssignees(assignment WorkAssignment) string {
+	names := []string{}
+	if assignment.Assignee != "" {
+		names = append(names, assignment.Assignee)
+	}
+	names = append(names, assignment.ExtraAssignees...)
+	if len(names) == 0 {
+		return "缺人"
+	}
+	return strings.Join(names, "、")
 }

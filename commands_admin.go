@@ -9,7 +9,7 @@ func registerAdminCommands(dg *discordgo.Session, cfg Config) error {
 func buildAdminCommands() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
-			Name:        "admin_profile",
+			Name:        "a_profile",
 			Description: "查看指定玩家的 profile 與報名資訊",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -21,15 +21,15 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_list",
+			Name:        "a_list",
 			Description: "查看管理總覽",
 		},
 		{
-			Name:        "admin_list_players",
+			Name:        "a_list_players",
 			Description: "列出所有已註冊玩家",
 		},
 		{
-			Name:        "admin_addplayer",
+			Name:        "a_addplayer",
 			Description: "將新玩家加入名單",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -75,7 +75,7 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_setrole",
+			Name:        "a_setrole",
 			Description: "編輯現有成員資料",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -115,7 +115,7 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_setgamename",
+			Name:        "a_setgamename",
 			Description: "只更新既有成員的遊戲名稱",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -133,7 +133,7 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_removeplayer",
+			Name:        "a_removeplayer",
 			Description: "移除已註冊玩家",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -151,7 +151,7 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_grant",
+			Name:        "a_grant",
 			Description: "將已註冊玩家加入管理員",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -163,7 +163,19 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_revoke",
+			Name:        "a_grant_tester",
+			Description: "將已註冊玩家加入測試員",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "player",
+					Description: "玩家 ID、@mention、遊戲名或顯示名",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "a_revoke",
 			Description: "移除動態管理員權限",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -175,7 +187,19 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_signup",
+			Name:        "a_revoke_tester",
+			Description: "移除測試員權限",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "player",
+					Description: "玩家 ID、@mention、遊戲名或顯示名",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "a_signup",
 			Description: "手動幫指定玩家報名某一天",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -194,7 +218,7 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_unsignup",
+			Name:        "a_unsignup",
 			Description: "手動取消指定玩家某一天的報名",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -213,7 +237,7 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_test_signup",
+			Name:        "t_signup",
 			Description: "手動幫指定玩家加入測試報名某一天",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -232,7 +256,7 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_test_unsignup",
+			Name:        "t_unsignup",
 			Description: "手動取消指定玩家某一天的測試報名",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -251,15 +275,68 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_test_signup_post",
+			Name:        "t_signup_post",
 			Description: "測試手動發送報名表到目前 guild 的設定頻道",
 		},
 		{
-			Name:        "admin_test_summary",
+			Name:        "t_boss3_assign",
+			Description: "手動調整測試版三王工作分配",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "day",
+					Description: "要調整的日期",
+					Required:    true,
+					Choices:     buildDayChoices(),
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "task",
+					Description: "三王工作名稱",
+					Required:    true,
+					Choices:     buildBoss3TaskChoices(),
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "mode",
+					Description: "調整方式",
+					Required:    true,
+					Choices:     buildBoss3OverrideModeChoices(),
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "player",
+					Description: "玩家 ID、@mention、遊戲名或顯示名",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "t_boss3_clear",
+			Description: "清除測試版三王工作分配覆寫",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "day",
+					Description: "要調整的日期",
+					Required:    true,
+					Choices:     buildDayChoices(),
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "task",
+					Description: "三王工作名稱",
+					Required:    true,
+					Choices:     buildBoss3TaskChoices(),
+				},
+			},
+		},
+		{
+			Name:        "t_summary",
 			Description: "查看測試報名的輸出結果",
 		},
 		{
-			Name:        "admin_summary_image",
+			Name:        "a_summary_image",
 			Description: "輸出正式報名的表格圖片",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -272,7 +349,7 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_test_summary_image",
+			Name:        "t_summary_image",
 			Description: "輸出測試報名的表格圖片",
 			Options: []*discordgo.ApplicationCommandOption{
 				{
@@ -285,7 +362,7 @@ func buildAdminCommands() []*discordgo.ApplicationCommand {
 			},
 		},
 		{
-			Name:        "admin_signup_access",
+			Name:        "a_signup_access",
 			Description: "設定玩家是否能自行報名",
 			Options: []*discordgo.ApplicationCommandOption{
 				{

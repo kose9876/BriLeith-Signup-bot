@@ -9,18 +9,6 @@ func registerBaseCommands(dg *discordgo.Session, cfg Config) error {
 func buildBaseCommands() []*discordgo.ApplicationCommand {
 	return []*discordgo.ApplicationCommand{
 		{
-			Name:        "setgamename",
-			Description: "設定自己的遊戲名稱",
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Type:        discordgo.ApplicationCommandOptionString,
-					Name:        "name",
-					Description: "遊戲名稱",
-					Required:    true,
-				},
-			},
-		},
-		{
 			Name:        "signup",
 			Description: "開啟報名面板",
 		},
@@ -38,7 +26,15 @@ func buildBaseCommands() []*discordgo.ApplicationCommand {
 		},
 		{
 			Name:        "setrole",
-			Description: "設定自己的主副職與破袍",
+			Description: "設定自己的遊戲名稱、主副職與破袍",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "name",
+					Description: "遊戲名稱",
+					Required:    true,
+				},
+			},
 		},
 		{
 			Name:        "summary",

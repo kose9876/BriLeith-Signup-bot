@@ -8,6 +8,7 @@ import (
 
 type AdminState struct {
 	AdminUsers         map[string]bool `json:"admin_users"`
+	TesterUsers        map[string]bool `json:"tester_users"`
 	BlockedSignupUsers map[string]bool `json:"blocked_signup_users"`
 }
 
@@ -18,6 +19,7 @@ type playerMatch struct {
 
 var adminState = AdminState{
 	AdminUsers:         map[string]bool{},
+	TesterUsers:        map[string]bool{},
 	BlockedSignupUsers: map[string]bool{},
 }
 
@@ -26,6 +28,7 @@ func loadAdminState() {
 		fmt.Println("讀取 admin_state.json 失敗:", err)
 		adminState = AdminState{
 			AdminUsers:         map[string]bool{},
+			TesterUsers:        map[string]bool{},
 			BlockedSignupUsers: map[string]bool{},
 		}
 		return
@@ -33,6 +36,9 @@ func loadAdminState() {
 
 	if adminState.AdminUsers == nil {
 		adminState.AdminUsers = map[string]bool{}
+	}
+	if adminState.TesterUsers == nil {
+		adminState.TesterUsers = map[string]bool{}
 	}
 	if adminState.BlockedSignupUsers == nil {
 		adminState.BlockedSignupUsers = map[string]bool{}
@@ -64,4 +70,11 @@ func isAdminUser(userID string) bool {
 
 func isSignupBlocked(userID string) bool {
 	return adminState.BlockedSignupUsers[userID]
+}
+
+func isTesterUser(userID string) bool {
+	if isAdminUser(userID) {
+		return true
+	}
+	return adminState.TesterUsers[userID]
 }

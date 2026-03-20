@@ -14,52 +14,68 @@ func handleAdminCommand(s *discordgo.Session, i *discordgo.InteractionCreate) bo
 	}
 
 	commandName := i.ApplicationCommandData().Name
-	if !strings.HasPrefix(commandName, "admin_") {
+	if !strings.HasPrefix(commandName, "a_") && !strings.HasPrefix(commandName, "t_") {
 		return false
 	}
 
 	logInteractionCommand(i)
 
-	if !requireAdmin(s, i) {
+	if commandName == "a_profile" || commandName == "a_list_players" {
+		if !requireAdminOrTester(s, i) {
+			return true
+		}
+	} else if strings.HasPrefix(commandName, "t_") {
+		if !requireTester(s, i) {
+			return true
+		}
+	} else if !requireAdmin(s, i) {
 		return true
 	}
 
 	switch commandName {
-	case "admin_profile":
+	case "a_profile":
 		handleAdminProfileCommand(s, i)
-	case "admin_list":
+	case "a_list":
 		handleAdminListCommand(s, i)
-	case "admin_list_players":
+	case "a_list_players":
 		handleAdminListPlayersCommand(s, i)
-	case "admin_addplayer":
+	case "a_addplayer":
 		handleAdminAddPlayerCommand(s, i)
-	case "admin_setrole":
+	case "a_setrole":
 		handleAdminSetRoleCommand(s, i)
-	case "admin_setgamename":
+	case "a_setgamename":
 		handleAdminSetGameNameCommand(s, i)
-	case "admin_removeplayer":
+	case "a_removeplayer":
 		handleAdminRemovePlayerCommand(s, i)
-	case "admin_grant":
+	case "a_grant":
 		handleAdminGrantCommand(s, i)
-	case "admin_revoke":
+	case "a_grant_tester":
+		handleAdminTesterGrantCommand(s, i)
+	case "a_revoke":
 		handleAdminRevokeCommand(s, i)
-	case "admin_signup":
+	case "a_revoke_tester":
+		handleAdminTesterRevokeCommand(s, i)
+	case "a_signup":
 		handleAdminSignupCommand(s, i)
-	case "admin_unsignup":
+	case "a_unsignup":
 		handleAdminUnsignupCommand(s, i)
-	case "admin_test_signup":
+	case "t_signup":
 		handleAdminTestSignupCommand(s, i)
-	case "admin_test_unsignup":
+	case "t_unsignup":
 		handleAdminTestUnsignupCommand(s, i)
-	case "admin_test_signup_post":
+	case "t_signup_post":
 		handleAdminTestSignupPanelCommand(s, i)
-	case "admin_test_summary":
+	case "t_boss3_assign":
+		handleAdminTestBoss3AssignCommand(s, i)
+	case "t_boss3_clear":
+		handleAdminTestBoss3ClearCommand(s, i)
+	case "t_summary":
 		handleAdminTestSummaryCommand(s, i)
-	case "admin_summary_image":
+	case "a_summary_image":
 		handleAdminSummaryImageCommand(s, i)
-	case "admin_test_summary_image":
+	case "t_summary_image":
 		handleAdminTestSummaryImageCommand(s, i)
-	case "admin_signup_access":
+	case "a_signup_access":
 		handleAdminSignupAccessCommand(s, i)
 	default:
 		respondEphemeral(s, i, "未知的管理指令。")
@@ -121,12 +137,14 @@ func handleAdminListCommand(s *discordgo.Session, i *discordgo.InteractionCreate
 	}
 
 	dynamicAdmins := collectEnabledUserMentions(adminState.AdminUsers)
+	testers := collectEnabledUserMentions(adminState.TesterUsers)
 	blockedUsers := collectEnabledUserMentions(adminState.BlockedSignupUsers)
 
 	content := fmt.Sprintf(
-		"管理總覽\n固定管理員: %s\n動態管理員: %s\n禁止自行報名: %s\n已註冊玩家數: %d",
+		"管理總覽\n固定管理員: %s\n動態管理員: %s\n測試員: %s\n禁止自行報名: %s\n已註冊玩家數: %d",
 		joinOrNone(rootAdmins),
 		joinOrNone(dynamicAdmins),
+		joinOrNone(testers),
 		joinOrNone(blockedUsers),
 		len(userProfiles),
 	)
@@ -243,7 +261,7 @@ func handleAdminSetRoleCommand(s *discordgo.Session, i *discordgo.InteractionCre
 		return
 	}
 	if !exists {
-		respondEphemeral(s, i, "這個玩家還沒有資料，請先使用 /admin_addplayer 建立名單。")
+		respondEphemeral(s, i, "這個玩家還沒有資料，請先使用 /a_addplayer 建立名單。")
 		return
 	}
 
@@ -304,7 +322,7 @@ func handleAdminSetGameNameCommand(s *discordgo.Session, i *discordgo.Interactio
 		return
 	}
 	if !exists {
-		respondEphemeral(s, i, "這個玩家還沒有資料，請先使用 /admin_addplayer 建立名單。")
+		respondEphemeral(s, i, "這個玩家還沒有資料，請先使用 /a_addplayer 建立名單。")
 		return
 	}
 
@@ -343,6 +361,7 @@ func handleAdminRemovePlayerCommand(s *discordgo.Session, i *discordgo.Interacti
 	saveProfiles()
 
 	delete(adminState.AdminUsers, userID)
+	delete(adminState.TesterUsers, userID)
 	delete(adminState.BlockedSignupUsers, userID)
 	saveAdminState()
 
@@ -425,6 +444,67 @@ func handleAdminRevokeCommand(s *discordgo.Session, i *discordgo.InteractionCrea
 	))
 }
 
+func handleAdminTesterGrantCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	options := i.ApplicationCommandData().Options
+
+	playerOption := findOption(options, "player")
+	if playerOption == nil {
+		respondEphemeral(s, i, "缺少必要參數。")
+		return
+	}
+
+	userID, _, exists, err := resolveRegisteredPlayer(playerOption.StringValue())
+	if err != nil {
+		respondEphemeral(s, i, err.Error())
+		return
+	}
+	if !exists {
+		respondEphemeral(s, i, "這個玩家還沒有註冊資料，請先建立名單。")
+		return
+	}
+
+	adminState.TesterUsers[userID] = true
+	saveAdminState()
+
+	respondEphemeral(s, i, fmt.Sprintf(
+		"已將 %s 加入測試員名單。",
+		formatPlayerLabel(userID),
+	))
+}
+
+func handleAdminTesterRevokeCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	options := i.ApplicationCommandData().Options
+
+	playerOption := findOption(options, "player")
+	if playerOption == nil {
+		respondEphemeral(s, i, "缺少必要參數。")
+		return
+	}
+
+	userID, _, exists, err := resolveRegisteredPlayer(playerOption.StringValue())
+	if err != nil {
+		respondEphemeral(s, i, err.Error())
+		return
+	}
+	if !exists {
+		respondEphemeral(s, i, "這個玩家目前不在名單內。")
+		return
+	}
+
+	if !adminState.TesterUsers[userID] {
+		respondEphemeral(s, i, "這個使用者目前不是測試員。")
+		return
+	}
+
+	delete(adminState.TesterUsers, userID)
+	saveAdminState()
+
+	respondEphemeral(s, i, fmt.Sprintf(
+		"已移除 %s 的測試員權限。",
+		formatPlayerLabel(userID),
+	))
+}
+
 func handleAdminSignupCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 
@@ -441,12 +521,22 @@ func handleAdminSignupCommand(s *discordgo.Session, i *discordgo.InteractionCrea
 		return
 	}
 	if !exists {
-		respondEphemeral(s, i, "這個玩家還沒有資料，請先使用 /admin_addplayer 建立名單。")
+		respondEphemeral(s, i, "這個玩家還沒有資料，請先使用 /a_addplayer 建立名單。")
 		return
 	}
 	day := dayOption.StringValue()
+	weekKey := getManagedSignupWeekKey()
 
-	addUserSignupDay(getManagedSignupWeekKey(), userID, day)
+	if isSignupDayFull(weeklySignups, weekKey, userID, day) {
+		respondEphemeral(s, i, fmt.Sprintf(
+			"%s 已額滿 %d 人，無法再手動報名。",
+			getDayLabel(day),
+			maxSignupUsersPerDay,
+		))
+		return
+	}
+
+	addUserSignupDay(weekKey, userID, day)
 
 	respondEphemeral(s, i, fmt.Sprintf(
 		"已幫 %s 手動報名 %s。",
@@ -471,7 +561,7 @@ func handleAdminUnsignupCommand(s *discordgo.Session, i *discordgo.InteractionCr
 		return
 	}
 	if !exists {
-		respondEphemeral(s, i, "這個玩家還沒有資料，請先使用 /admin_addplayer 建立名單。")
+		respondEphemeral(s, i, "這個玩家還沒有資料，請先使用 /a_addplayer 建立名單。")
 		return
 	}
 	day := dayOption.StringValue()
@@ -527,7 +617,7 @@ func handleAdminSignupAccessCommand(s *discordgo.Session, i *discordgo.Interacti
 		return
 	}
 	if !exists {
-		respondEphemeral(s, i, "這個玩家還沒有資料，請先使用 /admin_addplayer 建立名單。")
+		respondEphemeral(s, i, "這個玩家還沒有資料，請先使用 /a_addplayer 建立名單。")
 		return
 	}
 	blocked := blockedOption.BoolValue()

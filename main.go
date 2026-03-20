@@ -22,6 +22,7 @@ func main() {
 
 	loadSignups()
 	loadTestSignups()
+	loadTestBoss3Assignments()
 	loadProfiles()
 	loadAdminState()
 	loadSignupScheduleState()

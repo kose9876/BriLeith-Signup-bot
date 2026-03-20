@@ -19,3 +19,10 @@ type DayTaskAssignments struct {
 type WeekTaskAssignments struct {
 	Days map[string]DayTaskAssignments
 }
+
+type Boss3OverrideMode string
+
+const (
+	Boss3OverrideSwap Boss3OverrideMode = "swap"
+	Boss3OverrideAdd  Boss3OverrideMode = "add"
+)

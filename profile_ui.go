@@ -50,8 +50,9 @@ func buildSetRoleContent(userID string, username string) string {
 	}
 
 	return fmt.Sprintf(
-		"%s 的職業設定\n\n主職：%s\n副職：%s\n群組：%s\n破袍：%s\n\n請使用下方按鈕更新設定",
+		"%s 的角色設定\n\n遊戲名稱：%s\n主職：%s\n副職：%s\n群組：%s\n破袍：%s\n\n請使用下方按鈕更新設定",
 		username,
+		emptyFallback(profile.GameName),
 		getRoleLabel(profile.MainRole),
 		getRoleLabel(profile.SubRole),
 		getGroupLabel(profile.Group),

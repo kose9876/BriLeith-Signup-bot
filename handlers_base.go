@@ -52,8 +52,6 @@ func handleApplicationCommand(s *discordgo.Session, i *discordgo.InteractionCrea
 	switch i.ApplicationCommandData().Name {
 	case "signup":
 		handleSignupCommand(s, i)
-	case "setgamename":
-		handleSetGameNameCommand(s, i)
 	case "whatrole":
 		handleWhatRoleCommand(s, i)
 	case "setrole":
@@ -83,24 +81,6 @@ func handleSignupCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-func handleSetGameNameCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	gameName := i.ApplicationCommandData().Options[0].StringValue()
-	userID := i.Member.User.ID
-	username := i.Member.User.Username
-	updateGameName(userID, username, gameName)
-
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "已更新遊戲名稱：" + gameName,
-			Flags:   discordgo.MessageFlagsEphemeral,
-		},
-	})
-	if err != nil {
-		fmt.Println("setgamename command failed:", err)
-	}
-}
-
 func handleWhatRoleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	targetUser := i.ApplicationCommandData().Options[0].UserValue(s)
 	profile, exists := userProfiles[targetUser.ID]
@@ -120,6 +100,7 @@ func handleWhatRoleCommand(s *discordgo.Session, i *discordgo.InteractionCreate)
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: content,
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 	if err != nil {
@@ -130,11 +111,13 @@ func handleWhatRoleCommand(s *discordgo.Session, i *discordgo.InteractionCreate)
 func handleSetRoleCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	userID := i.Member.User.ID
 	username := i.Member.User.Username
-	profile, exists := userProfiles[userID]
-	if !exists || profile.GameName == "" {
-		respondEphemeral(s, i, "請先使用 /setgamename 設定遊戲名稱。")
+	gameNameOption := findOption(i.ApplicationCommandData().Options, "name")
+	if gameNameOption == nil {
+		respondEphemeral(s, i, "缺少 name 參數。")
 		return
 	}
+
+	updateGameName(userID, username, gameNameOption.StringValue())
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -266,12 +249,13 @@ func handleSummaryComponent(s *discordgo.Session, i *discordgo.InteractionCreate
 func handleTestSummaryComponent(s *discordgo.Session, i *discordgo.InteractionCreate, customID string) {
 	weekKey := getSignupWeekKeyAt(nowInBotLocation())
 	dayKey := strings.TrimPrefix(customID, "test_summary_")
-	content := buildFullDaySummaryTextFromStore(testWeeklySignups, weekKey, dayKey)
+	content := buildTestFullDaySummaryText(weekKey, dayKey)
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: content,
+			Flags:   discordgo.MessageFlagsEphemeral,
 		},
 	})
 	if err != nil {

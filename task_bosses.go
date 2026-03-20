@@ -148,43 +148,14 @@ func assignBoss2Group(day DayAssignment, history map[string][]string) []GroupAss
 }
 
 func getBoss3Tasks(day DayAssignment) []string {
-	totalCount := len(day.DPS)
-	if day.Tank != "缺坦" {
-		totalCount++
-	}
-	if day.Healer != "缺補" {
-		totalCount++
-	}
-
-	fortyPercentTask := "40%刻印、黃道、支援箭"
-	tasks := []string{
+	return []string{
 		"狀態支援",
-	}
-
-	if totalCount >= 7 {
-		tasks = append(tasks, "烙印")
-		tasks = append(tasks, "煙")
-	} else {
-		tasks = append(tasks, "烙印、煙")
-	}
-
-	tasks = append(tasks,
+		"烙印",
+		"煙",
 		"鉤拳、貓蒼",
 		"80%刻印、鯨魚",
-	)
-
-	if totalCount < 8 {
-		smokeIndex := 2
-		if smokeIndex >= len(tasks) {
-			smokeIndex = len(tasks) - 1
-		}
-		tasks[smokeIndex] = tasks[smokeIndex] + "、" + fortyPercentTask
-		return tasks
+		"40%刻印、黃道、支援箭",
 	}
-
-	tasks = append(tasks, fortyPercentTask)
-
-	return tasks
 }
 
 func assignBoss3(day DayAssignment, history map[string][]string) []WorkAssignment {

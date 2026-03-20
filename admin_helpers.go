@@ -31,6 +31,24 @@ func requireAdmin(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
 	return true
 }
 
+func requireTester(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
+	if i.Member == nil || i.Member.User == nil || !isTesterUser(i.Member.User.ID) {
+		respondEphemeral(s, i, "你不是測試員，無法使用這個測試指令。")
+		return false
+	}
+
+	return true
+}
+
+func requireAdminOrTester(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
+	if i.Member == nil || i.Member.User == nil || (!isAdminUser(i.Member.User.ID) && !isTesterUser(i.Member.User.ID)) {
+		respondEphemeral(s, i, "你沒有權限使用這個指令。")
+		return false
+	}
+
+	return true
+}
+
 func addUserSignupDay(weekKey string, userID string, day string) {
 	if weeklySignups[weekKey] == nil {
 		weeklySignups[weekKey] = map[string][]string{}

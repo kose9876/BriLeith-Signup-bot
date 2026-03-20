@@ -1,9 +1,11 @@
 package main
 
 type WorkAssignment struct {
-	Label    string
-	Assignee string
-	UserID   string
+	Label          string
+	Assignee       string
+	UserID         string
+	ExtraAssignees []string
+	ExtraUserIDs   []string
 }
 
 type GroupAssignment struct {

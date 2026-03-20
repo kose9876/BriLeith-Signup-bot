@@ -81,6 +81,24 @@ func pickFirstByRole(candidates []string, role string, useSubRole bool) (string,
 	return "", candidates
 }
 
+func pickFirstPrimaryHealerWithoutSubRole(candidates []string) (string, []string) {
+	for i, userID := range candidates {
+		profile, exists := userProfiles[userID]
+		if !exists {
+			continue
+		}
+		if profile.MainRole != "healer" || profile.SubRole != "" {
+			continue
+		}
+
+		remaining := append([]string{}, candidates[:i]...)
+		remaining = append(remaining, candidates[i+1:]...)
+		return userID, remaining
+	}
+
+	return "", candidates
+}
+
 func assignOneDay(applicants []string) DayAssignment {
 	remaining := append([]string{}, applicants...)
 
@@ -92,7 +110,10 @@ func assignOneDay(applicants []string) DayAssignment {
 		tank = "缺坦"
 	}
 
-	healer, remaining := pickFirstByRole(remaining, "healer", false)
+	healer, remaining := pickFirstPrimaryHealerWithoutSubRole(remaining)
+	if healer == "" {
+		healer, remaining = pickFirstByRole(remaining, "healer", false)
+	}
 	if healer == "" {
 		healer, remaining = pickFirstByRole(remaining, "healer", true)
 	}

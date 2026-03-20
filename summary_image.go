@@ -54,6 +54,7 @@ func handleAdminTestSummaryImageCommand(s *discordgo.Session, i *discordgo.Inter
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
 			Content: getWeekRangeText(weekKey) + " " + dayLabels[dayKey] + " 測試表格圖片",
+			Flags:   discordgo.MessageFlagsEphemeral,
 			Files: []*discordgo.File{
 				{
 					Name:        "test-summary-" + dayKey + ".png",
@@ -104,7 +105,13 @@ func handleAdminSummaryImageCommand(s *discordgo.Session, i *discordgo.Interacti
 }
 
 func buildTestSummaryImageData(weekKey string, dayKey string) summaryImageData {
-	return buildSummaryImageDataFromStore(testWeeklySignups, weekKey, dayKey)
+	assignment := buildWeekAssignmentFromStore(testWeeklySignups, weekKey)
+	day := assignment.Days[dayKey]
+	boss1 := assignBoss1(day, map[string][]string{})
+	boss2 := assignBoss2Group(day, map[string][]string{})
+	boss3 := buildTestBoss3Assignments(weekKey, dayKey)
+
+	return buildSummaryImageDataFromAssignments(weekKey, dayKey, day, boss1, boss2, boss3)
 }
 
 func buildSummaryImageDataFromStore(signups map[string]map[string][]string, weekKey string, dayKey string) summaryImageData {
@@ -114,6 +121,10 @@ func buildSummaryImageDataFromStore(signups map[string]map[string][]string, week
 	boss2 := assignBoss2Group(day, map[string][]string{})
 	boss3 := assignBoss3(day, map[string][]string{})
 
+	return buildSummaryImageDataFromAssignments(weekKey, dayKey, day, boss1, boss2, boss3)
+}
+
+func buildSummaryImageDataFromAssignments(weekKey string, dayKey string, day DayAssignment, boss1 []WorkAssignment, boss2 []GroupAssignment, boss3 []WorkAssignment) summaryImageData {
 	boss3Columns := splitBoss3AssignmentsForImage(boss3)
 	rows := buildSummaryImageRows(day, boss1, boss2, boss3Columns)
 
@@ -210,7 +221,7 @@ func collectBoss2AssignmentsForUser(groups []GroupAssignment, userID string) str
 func collectBoss3AssignmentsForUser(assignments []WorkAssignment, userID string) string {
 	var labels []string
 	for _, assignment := range assignments {
-		if assignment.UserID == userID {
+		if assignment.UserID == userID || containsUser(assignment.ExtraUserIDs, userID) {
 			labels = append(labels, formatBoss3ImageLabel(assignment.Label))
 		}
 	}
