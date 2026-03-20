@@ -21,7 +21,7 @@ cd bri
 Copy-Item config.example.json config.json
 ```
 
-3. 編輯 `config.json`，填入你的 Bot 設定：
+3. 你可以直接手動編輯 `config.json`，或直接執行程式後依照 CLI 提示完成初始化：
 
 ```json
 {
@@ -41,7 +41,14 @@ Copy-Item config.example.json config.json
 go run .
 ```
 
-如果首次執行缺少檔案，程式會自動建立以下 JSON：
+如果 `config.json` 尚未填完整，程式會在 CLI 逐步要求輸入：
+
+- `Discord Bot Token`
+- `Discord Application ID`
+- `主要 Guild ID`
+- `管理員 Discord User ID`
+
+如果首次執行缺少檔案，程式也會自動建立以下 JSON：
 
 - `profiles.json`
 - `signups.json`
@@ -50,6 +57,8 @@ go run .
 - `signup_schedule_state.json`
 
 所有自動產生的 JSON 檔都使用 UTF-8 編碼與 2 空白縮排。
+
+程式執行中，若有人使用 slash command 或按下按鈕，CLI 也會顯示簡單紀錄，方便確認目前是哪位使用者觸發了哪個操作。
 
 ## 設定欄位說明
 

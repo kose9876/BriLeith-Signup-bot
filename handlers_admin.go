@@ -18,6 +18,8 @@ func handleAdminCommand(s *discordgo.Session, i *discordgo.InteractionCreate) bo
 		return false
 	}
 
+	logInteractionCommand(i)
+
 	if !requireAdmin(s, i) {
 		return true
 	}

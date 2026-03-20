@@ -26,6 +26,7 @@ func setupBotHandlers(dg *discordgo.Session) {
 
 	dg.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if i.Type == discordgo.InteractionApplicationCommand && i.ApplicationCommandData().Name == "help" {
+			logInteractionCommand(i)
 			handleHelpCommand(s, i)
 			return
 		}
@@ -35,11 +36,13 @@ func setupBotHandlers(dg *discordgo.Session) {
 		}
 
 		if i.Type == discordgo.InteractionApplicationCommand {
+			logInteractionCommand(i)
 			handleApplicationCommand(s, i)
 			return
 		}
 
 		if i.Type == discordgo.InteractionMessageComponent {
+			logInteractionComponent(i)
 			handleMessageComponent(s, i)
 		}
 	})

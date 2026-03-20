@@ -46,7 +46,8 @@ func ensureConfigFile() error {
 		return fmt.Errorf("建立 %s 失敗: %w", configFile, err)
 	}
 
-	return fmt.Errorf("已建立 %s，請先填入設定後再重新執行", configFile)
+	fmt.Printf("已建立 %s，接下來會在啟動流程中引導你完成初始化。\n", configFile)
+	return nil
 }
 
 func ensureJSONFile(path string, value any) error {
