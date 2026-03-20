@@ -22,7 +22,6 @@ type summaryImageRow struct {
 	Boss2  string
 	Boss3A string
 	Boss3B string
-	Boss3C string
 }
 
 type summaryImageData struct {
@@ -31,7 +30,6 @@ type summaryImageData struct {
 	Boss2Sub  string
 	Boss3SubA string
 	Boss3SubB string
-	Boss3SubC string
 	Rows      []summaryImageRow
 }
 
@@ -70,23 +68,61 @@ func handleAdminTestSummaryImageCommand(s *discordgo.Session, i *discordgo.Inter
 	}
 }
 
+func handleAdminSummaryImageCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	dayOption := findOption(i.ApplicationCommandData().Options, "day")
+	if dayOption == nil {
+		respondEphemeral(s, i, "缺少 day 參數。")
+		return
+	}
+
+	weekKey := getManagedSignupWeekKey()
+	dayKey := dayOption.StringValue()
+
+	data := buildSummaryImageDataFromStore(weeklySignups, weekKey, dayKey)
+	imageBytes, err := renderSummaryImagePNG(data)
+	if err != nil {
+		respondEphemeral(s, i, "產生表格圖片失敗："+err.Error())
+		return
+	}
+
+	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: getWeekRangeText(weekKey) + " " + dayLabels[dayKey] + " 表格圖片",
+			Files: []*discordgo.File{
+				{
+					Name:        "summary-" + dayKey + ".png",
+					ContentType: "image/png",
+					Reader:      bytes.NewReader(imageBytes),
+				},
+			},
+		},
+	})
+	if err != nil {
+		fmt.Println("admin summary image failed:", err)
+	}
+}
+
 func buildTestSummaryImageData(weekKey string, dayKey string) summaryImageData {
-	assignment := buildWeekAssignmentFromStore(testWeeklySignups, weekKey)
+	return buildSummaryImageDataFromStore(testWeeklySignups, weekKey, dayKey)
+}
+
+func buildSummaryImageDataFromStore(signups map[string]map[string][]string, weekKey string, dayKey string) summaryImageData {
+	assignment := buildWeekAssignmentFromStore(signups, weekKey)
 	day := assignment.Days[dayKey]
 	boss1 := assignBoss1(day, map[string][]string{})
 	boss2 := assignBoss2Group(day, map[string][]string{})
 	boss3 := assignBoss3(day, map[string][]string{})
 
-	boss3Buckets := splitBoss3Assignments(boss3)
-	rows := buildSummaryImageRows(day, boss1, boss2, boss3Buckets)
+	boss3Columns := splitBoss3AssignmentsForImage(boss3)
+	rows := buildSummaryImageRows(day, boss1, boss2, boss3Columns)
 
 	return summaryImageData{
 		DateLabel: buildSummaryImageDateLabel(weekKey, dayKey),
 		Boss1Sub:  "一王分配",
 		Boss2Sub:  "二王站位",
-		Boss3SubA: joinAssignmentLabels(boss3Buckets[0]),
-		Boss3SubB: joinAssignmentLabels(boss3Buckets[1]),
-		Boss3SubC: joinAssignmentLabels(boss3Buckets[2]),
+		Boss3SubA: "80%/40%",
+		Boss3SubB: "60%",
 		Rows:      rows,
 	}
 }
@@ -106,7 +142,7 @@ func buildSummaryImageDateLabel(weekKey string, dayKey string) string {
 	return dateText + weekdayMark[dayKey]
 }
 
-func buildSummaryImageRows(day DayAssignment, boss1 []WorkAssignment, boss2 []GroupAssignment, boss3Buckets [3][]WorkAssignment) []summaryImageRow {
+func buildSummaryImageRows(day DayAssignment, boss1 []WorkAssignment, boss2 []GroupAssignment, boss3Columns [2][]WorkAssignment) []summaryImageRow {
 	playerOrder := collectSummaryImagePlayers(day)
 	rows := make([]summaryImageRow, 0, len(playerOrder))
 
@@ -115,9 +151,8 @@ func buildSummaryImageRows(day DayAssignment, boss1 []WorkAssignment, boss2 []Gr
 			Player: getDisplayName(userID),
 			Boss1:  collectBoss1AssignmentsForUser(boss1, userID),
 			Boss2:  collectBoss2AssignmentsForUser(boss2, userID),
-			Boss3A: collectBoss3AssignmentsForUser(boss3Buckets[0], userID),
-			Boss3B: collectBoss3AssignmentsForUser(boss3Buckets[1], userID),
-			Boss3C: collectBoss3AssignmentsForUser(boss3Buckets[2], userID),
+			Boss3A: collectBoss3AssignmentsForUser(boss3Columns[0], userID),
+			Boss3B: collectBoss3AssignmentsForUser(boss3Columns[1], userID),
 		})
 	}
 
@@ -176,63 +211,66 @@ func collectBoss3AssignmentsForUser(assignments []WorkAssignment, userID string)
 	var labels []string
 	for _, assignment := range assignments {
 		if assignment.UserID == userID {
-			labels = append(labels, assignment.Label)
+			labels = append(labels, formatBoss3ImageLabel(assignment.Label))
 		}
 	}
 	return strings.Join(labels, "\n")
 }
 
-func splitBoss3Assignments(assignments []WorkAssignment) [3][]WorkAssignment {
-	var buckets [3][]WorkAssignment
-	for index, assignment := range assignments {
-		switch {
-		case index < 2:
-			buckets[0] = append(buckets[0], assignment)
-		case index < 4:
-			buckets[1] = append(buckets[1], assignment)
-		default:
-			buckets[2] = append(buckets[2], assignment)
-		}
+func formatBoss3ImageLabel(label string) string {
+	switch label {
+	case "60%坦克工作":
+		return "刻印"
+	default:
+		return label
 	}
-	return buckets
 }
 
-func joinAssignmentLabels(assignments []WorkAssignment) string {
-	if len(assignments) == 0 {
-		return "-"
-	}
-
-	labels := make([]string, 0, len(assignments))
+func splitBoss3AssignmentsForImage(assignments []WorkAssignment) [2][]WorkAssignment {
+	var columns [2][]WorkAssignment
 	for _, assignment := range assignments {
-		labels = append(labels, assignment.Label)
+		if isBoss3SixtyPercentTask(assignment.Label) {
+			columns[1] = append(columns[1], assignment)
+			continue
+		}
+		columns[0] = append(columns[0], assignment)
 	}
-	return strings.Join(labels, "\n")
+	return columns
+}
+
+func isBoss3SixtyPercentTask(label string) bool {
+	switch label {
+	case "60%坦克工作":
+		return true
+	default:
+		return false
+	}
 }
 
 func renderSummaryImagePNG(data summaryImageData) ([]byte, error) {
-	face, err := loadSummaryImageFontFace(15)
+	face, err := loadSummaryImageFontFace(14)
 	if err != nil {
 		return nil, err
 	}
 	defer face.Close()
 
-	headerFace, err := loadSummaryImageFontFace(18)
+	headerFace, err := loadSummaryImageFontFace(17)
 	if err != nil {
 		return nil, err
 	}
 	defer headerFace.Close()
 
-	subHeaderFace, err := loadSummaryImageFontFace(14)
+	subHeaderFace, err := loadSummaryImageFontFace(13)
 	if err != nil {
 		return nil, err
 	}
 	defer subHeaderFace.Close()
 
-	columnWidths := []int{150, 110, 110, 170, 150, 150}
-	topHeaderHeight := 34
-	subHeaderHeight := 46
-	rowHeight := 46
-	padding := 8
+	columnWidths := []int{150, 110, 110, 235, 235}
+	topHeaderHeight := 30
+	subHeaderHeight := 40
+	rowHeight := 35
+	padding := 6
 	width := sumInts(columnWidths)
 	height := topHeaderHeight + subHeaderHeight + len(data.Rows)*rowHeight
 
@@ -255,24 +293,24 @@ func renderSummaryImagePNG(data summaryImageData) ([]byte, error) {
 	fillRect(img, x, 0, columnWidths[1], topHeaderHeight, boss1HeaderColor)
 	drawCenteredText(img, headerFace, "一王", image.Rect(x, 0, x+columnWidths[1], topHeaderHeight), textColor)
 	fillRect(img, x, topHeaderHeight, columnWidths[1], subHeaderHeight, boss1HeaderColor)
-	drawWrappedText(img, subHeaderFace, data.Boss1Sub, image.Rect(x+padding, topHeaderHeight+padding/2, x+columnWidths[1]-padding, topHeaderHeight+subHeaderHeight-padding/2), textColor)
+	drawWrappedCenteredText(img, subHeaderFace, data.Boss1Sub, image.Rect(x+padding, topHeaderHeight+padding/2, x+columnWidths[1]-padding, topHeaderHeight+subHeaderHeight-padding/2), textColor)
 
 	x += columnWidths[1]
 	fillRect(img, x, 0, columnWidths[2], topHeaderHeight, boss2HeaderColor)
 	drawCenteredText(img, headerFace, "二王", image.Rect(x, 0, x+columnWidths[2], topHeaderHeight), textColor)
 	fillRect(img, x, topHeaderHeight, columnWidths[2], subHeaderHeight, boss2HeaderColor)
-	drawWrappedText(img, subHeaderFace, data.Boss2Sub, image.Rect(x+padding, topHeaderHeight+padding/2, x+columnWidths[2]-padding, topHeaderHeight+subHeaderHeight-padding/2), textColor)
+	drawWrappedCenteredText(img, subHeaderFace, data.Boss2Sub, image.Rect(x+padding, topHeaderHeight+padding/2, x+columnWidths[2]-padding, topHeaderHeight+subHeaderHeight-padding/2), textColor)
 
 	x += columnWidths[2]
-	boss3Width := columnWidths[3] + columnWidths[4] + columnWidths[5]
+	boss3Width := columnWidths[3] + columnWidths[4]
 	fillRect(img, x, 0, boss3Width, topHeaderHeight, boss3HeaderColor)
 	drawCenteredText(img, headerFace, "三王", image.Rect(x, 0, x+boss3Width, topHeaderHeight), textColor)
 
-	subHeaders := []string{data.Boss3SubA, data.Boss3SubB, data.Boss3SubC}
+	subHeaders := []string{data.Boss3SubA, data.Boss3SubB}
 	for index, subHeader := range subHeaders {
 		colX := x + sumInts(columnWidths[3:3+index])
 		fillRect(img, colX, topHeaderHeight, columnWidths[3+index], subHeaderHeight, boss3HeaderColor)
-		drawWrappedText(img, subHeaderFace, subHeader, image.Rect(colX+padding, topHeaderHeight+padding/2, colX+columnWidths[3+index]-padding, topHeaderHeight+subHeaderHeight-padding/2), textColor)
+		drawWrappedCenteredText(img, subHeaderFace, subHeader, image.Rect(colX+padding, topHeaderHeight+padding/2, colX+columnWidths[3+index]-padding, topHeaderHeight+subHeaderHeight-padding/2), textColor)
 	}
 
 	for rowIndex, row := range data.Rows {
@@ -281,16 +319,16 @@ func renderSummaryImagePNG(data summaryImageData) ([]byte, error) {
 			fillRect(img, 0, y, width, rowHeight, rowAltColor)
 		}
 
-		values := []string{row.Player, row.Boss1, row.Boss2, row.Boss3A, row.Boss3B, row.Boss3C}
+		values := []string{row.Player, row.Boss1, row.Boss2, row.Boss3A, row.Boss3B}
 		cellX := 0
 		for colIndex, value := range values {
-			drawWrappedText(img, face, value, image.Rect(cellX+padding, y+padding/2, cellX+columnWidths[colIndex]-padding, y+rowHeight-padding/2), textColor)
+			drawWrappedCenteredText(img, face, value, image.Rect(cellX+padding, y+padding/2, cellX+columnWidths[colIndex]-padding, y+rowHeight-padding/2), textColor)
 			cellX += columnWidths[colIndex]
 		}
 	}
 
-	drawVerticalGridLines(img, columnWidths, height, borderColor)
-	drawHorizontalGridLines(img, topHeaderHeight, subHeaderHeight, rowHeight, len(data.Rows), width, borderColor)
+	drawVerticalGridLines(img, columnWidths, topHeaderHeight, height, borderColor)
+	drawHorizontalGridLines(img, columnWidths[0], topHeaderHeight, subHeaderHeight, rowHeight, len(data.Rows), width, borderColor)
 
 	var buffer bytes.Buffer
 	if err := png.Encode(&buffer, img); err != nil {
@@ -367,6 +405,34 @@ func drawWrappedText(img *image.RGBA, face font.Face, text string, rect image.Re
 	}
 }
 
+func drawWrappedCenteredText(img *image.RGBA, face font.Face, text string, rect image.Rectangle, textColor color.Color) {
+	if text == "" {
+		return
+	}
+
+	drawer := &font.Drawer{
+		Dst:  img,
+		Src:  image.NewUniform(textColor),
+		Face: face,
+	}
+
+	lines := wrapTextToWidth(drawer, text, rect.Dx())
+	lineHeight := (face.Metrics().Ascent + face.Metrics().Descent).Round()
+	totalHeight := len(lines) * lineHeight
+	startY := rect.Min.Y + (rect.Dy()-totalHeight)/2 + face.Metrics().Ascent.Round()
+
+	for index, line := range lines {
+		y := startY + index*lineHeight
+		if y > rect.Max.Y {
+			break
+		}
+		lineWidth := drawer.MeasureString(line).Round()
+		x := rect.Min.X + (rect.Dx()-lineWidth)/2
+		drawer.Dot = fixed.P(x, y)
+		drawer.DrawString(line)
+	}
+}
+
 func wrapTextToWidth(drawer *font.Drawer, text string, maxWidth int) []string {
 	paragraphs := strings.Split(text, "\n")
 	var lines []string
@@ -395,18 +461,22 @@ func wrapTextToWidth(drawer *font.Drawer, text string, maxWidth int) []string {
 	return lines
 }
 
-func drawVerticalGridLines(img *image.RGBA, columnWidths []int, height int, c color.Color) {
+func drawVerticalGridLines(img *image.RGBA, columnWidths []int, topHeaderHeight int, height int, c color.Color) {
 	x := 0
-	for _, width := range columnWidths {
-		drawLine(img, x, 0, x, height, c)
+	for index, width := range columnWidths {
+		startY := 0
+		if index == len(columnWidths)-2 {
+			startY = topHeaderHeight
+		}
+		drawLine(img, x, startY, x, height, c)
 		x += width
 	}
 	drawLine(img, x-1, 0, x-1, height, c)
 }
 
-func drawHorizontalGridLines(img *image.RGBA, topHeaderHeight int, subHeaderHeight int, rowHeight int, rowCount int, width int, c color.Color) {
+func drawHorizontalGridLines(img *image.RGBA, firstColumnWidth int, topHeaderHeight int, subHeaderHeight int, rowHeight int, rowCount int, width int, c color.Color) {
 	drawLine(img, 0, 0, width, 0, c)
-	drawLine(img, 0, topHeaderHeight, width, topHeaderHeight, c)
+	drawLine(img, firstColumnWidth, topHeaderHeight, width, topHeaderHeight, c)
 	drawLine(img, 0, topHeaderHeight+subHeaderHeight, width, topHeaderHeight+subHeaderHeight, c)
 	for rowIndex := 1; rowIndex <= rowCount; rowIndex++ {
 		y := topHeaderHeight + subHeaderHeight + rowIndex*rowHeight

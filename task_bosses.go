@@ -1,97 +1,5 @@
 package main
 
-import "strings"
-
-type WorkAssignment struct {
-	Label    string
-	Assignee string
-	UserID   string
-}
-
-type GroupAssignment struct {
-	Label     string
-	Assignees []string
-	UserIDs   []string
-}
-
-func containsUser(users []string, target string) bool {
-	for _, userID := range users {
-		if userID == target {
-			return true
-		}
-	}
-	return false
-}
-
-func pickPreferredUser(taskKey string, users []string, history map[string][]string, match func(string) bool) (string, []string) {
-	past := history[taskKey]
-
-	for i := len(past) - 1; i >= 0; i-- {
-		userID := past[i]
-		if containsUser(users, userID) && match(userID) {
-			return userID, removeUser(users, userID)
-		}
-	}
-
-	return pickFirstMatching(users, match)
-}
-
-func pickPreferredAny(taskKey string, users []string, history map[string][]string) (string, []string) {
-	return pickPreferredUser(taskKey, users, history, func(string) bool { return true })
-}
-
-func recordWorkAssignments(history map[string][]string, assignments []WorkAssignment) {
-	for _, assignment := range assignments {
-		if assignment.UserID == "" {
-			continue
-		}
-		history[assignment.Label] = append(history[assignment.Label], assignment.UserID)
-	}
-}
-
-func recordHistory(history map[string][]string, taskKey string, userID string) {
-	if userID == "" {
-		return
-	}
-	history[taskKey] = append(history[taskKey], userID)
-}
-
-func isExperienced(userID string) bool {
-	profile, exists := userProfiles[userID]
-	return exists && profile.Group == "experienced"
-}
-func hasCape(userID string) bool {
-	profile, exists := userProfiles[userID]
-	return exists && profile.HasCape
-}
-
-func removeUser(users []string, target string) []string {
-	result := []string{}
-	for _, userID := range users {
-		if userID != target {
-			result = append(result, userID)
-		}
-	}
-	return result
-}
-
-func pickFirstMatching(users []string, match func(string) bool) (string, []string) {
-	for i, userID := range users {
-		if match(userID) {
-			remaining := append([]string{}, users[:i]...)
-			remaining = append(remaining, users[i+1:]...)
-			return userID, remaining
-		}
-	}
-
-	return "", users
-}
-
-func isNewbie(userID string) bool {
-	profile, exists := userProfiles[userID]
-	return exists && profile.Group == "newbie"
-}
-
 func assignBoss1(day DayAssignment, history map[string][]string) []WorkAssignment {
 	assignments := []WorkAssignment{}
 	remaining := append([]string{}, day.DPS...)
@@ -150,89 +58,6 @@ func assignBoss1(day DayAssignment, history map[string][]string) []WorkAssignmen
 	assignments = append(assignments, WorkAssignment{Label: "11點", Assignee: positions["boss1_11"], UserID: positionUsers["boss1_11"]})
 
 	return assignments
-}
-
-func buildBoss1TaskText(day DayAssignment) string {
-	assignments := assignBoss1(day, map[string][]string{})
-
-	var lines []string
-	lines = append(lines, "1王")
-
-	for _, assignment := range assignments {
-		lines = append(lines, assignment.Label+"："+assignment.Assignee)
-	}
-
-	return strings.Join(lines, "\n")
-}
-
-func buildDayBossSummaryText(weekKey string, dayKey string) string {
-	assignment := buildWeekAssignment(weekKey)
-	day := assignment.Days[dayKey]
-
-	dayNames := map[string]string{
-		"day_mon": "周一",
-		"day_tue": "周二",
-		"day_wed": "周三",
-		"day_thu": "周四",
-		"day_fri": "周五",
-		"day_sat": "周六",
-		"day_sun": "周日",
-	}
-
-	dayDateText := getDayDateText(weekKey, dayKey)
-
-	return getWeekRangeText(weekKey) + " " + dayNames[dayKey] + "（" + dayDateText + "）Boss分配\n\n" +
-		buildBoss1TaskText(day)
-}
-func buildFullDaySummaryText(weekKey string, dayKey string) string {
-	return buildFullDaySummaryTextFromStore(weeklySignups, weekKey, dayKey)
-}
-
-func buildFullDaySummaryTextFromStore(signups map[string]map[string][]string, weekKey string, dayKey string) string {
-	assignment := buildWeekAssignmentFromStore(signups, weekKey)
-	day := assignment.Days[dayKey]
-
-	dayNames := map[string]string{
-		"day_mon": "周一",
-		"day_tue": "周二",
-		"day_wed": "周三",
-		"day_thu": "周四",
-		"day_fri": "周五",
-		"day_sat": "周六",
-		"day_sun": "周日",
-	}
-
-	dayDateText := getDayDateText(weekKey, dayKey)
-
-	var dpsNames []string
-	for _, userID := range day.DPS {
-		dpsNames = append(dpsNames, getDisplayName(userID))
-	}
-
-	dpsText := "無"
-	if len(dpsNames) > 0 {
-		dpsText = strings.Join(dpsNames, "、")
-	}
-
-	boss1Text := buildBoss1TaskText(day)
-	boss2Text := buildBoss2TaskText(day)
-	boss3Text := buildBoss3TaskText(day)
-
-	return getWeekRangeText(weekKey) + " " + dayNames[dayKey] + "（" + dayDateText + "）分配總覽\n\n" +
-		"隊伍配置\n" +
-		"坦克：" + getDisplayName(day.Tank) + "\n" +
-		"補師：" + getDisplayName(day.Healer) + "\n" +
-		"輸出：" + dpsText + "\n\n" +
-		boss1Text + "\n\n" +
-		boss2Text + "\n\n" +
-		boss3Text
-}
-
-func fillToTwo(assignees []string) []string {
-	for len(assignees) < 2 {
-		assignees = append(assignees, "缺人")
-	}
-	return assignees
 }
 
 func assignBoss2Group(day DayAssignment, history map[string][]string) []GroupAssignment {
@@ -322,18 +147,6 @@ func assignBoss2Group(day DayAssignment, history map[string][]string) []GroupAss
 	}
 }
 
-func buildBoss2TaskText(day DayAssignment) string {
-	assignments := assignBoss2Group(day, map[string][]string{})
-
-	var lines []string
-	lines = append(lines, "2王")
-
-	for _, assignment := range assignments {
-		lines = append(lines, assignment.Label+"："+strings.Join(assignment.Assignees, "、"))
-	}
-
-	return strings.Join(lines, "\n")
-}
 func getBoss3Tasks(day DayAssignment) []string {
 	totalCount := len(day.DPS)
 	if day.Tank != "缺坦" {
@@ -422,19 +235,6 @@ func assignBoss3(day DayAssignment, history map[string][]string) []WorkAssignmen
 	}
 
 	return assignments
-}
-
-func buildBoss3TaskText(day DayAssignment) string {
-	assignments := assignBoss3(day, map[string][]string{})
-
-	var lines []string
-	lines = append(lines, "3王")
-
-	for _, assignment := range assignments {
-		lines = append(lines, assignment.Label+"："+assignment.Assignee)
-	}
-
-	return strings.Join(lines, "\n")
 }
 
 func buildWeekTaskAssignments(weekKey string) WeekTaskAssignments {

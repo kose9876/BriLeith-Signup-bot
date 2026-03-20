@@ -74,21 +74,34 @@ go run .
 
 - `/admin_list`：查看管理總覽
 - `/admin_list_players`：列出所有已註冊玩家
-- `/admin_profile user:@玩家`：查看玩家 profile 與報名資訊
-- `/admin_addplayer`：建立新玩家資料
-- `/admin_setrole`：編輯既有玩家的遊戲名稱、主副職、群組、破袍
-- `/admin_setgamename`：只修改既有玩家的遊戲名稱
-- `/admin_removeplayer`：移除玩家，可選是否刪除本週報名
-- `/admin_signup`：手動幫玩家報名某一天
-- `/admin_unsignup`：手動取消玩家某一天報名
-- `/admin_test_signup`：手動幫玩家加入測試報名某一天
-- `/admin_test_unsignup`：手動取消玩家某一天的測試報名
-- `/admin_signup_access`：設定玩家能否自行報名
-- `/admin_grant`：將已註冊玩家加入管理員
-- `/admin_revoke`：移除動態管理員權限
+- `/admin_profile player:<玩家>`：查看玩家 profile 與報名資訊
+- `/admin_addplayer user_id:<Discord ID 或 @mention> game_name:<遊戲名稱> [display_name:<顯示名>]`：建立新玩家資料
+- `/admin_setrole player:<玩家>`：編輯既有玩家的遊戲名稱、主副職、群組、破袍
+- `/admin_setgamename player:<玩家> game_name:<遊戲名稱>`：只修改既有玩家的遊戲名稱
+- `/admin_removeplayer player:<玩家>`：移除玩家，可選是否刪除本週報名
+- `/admin_signup player:<玩家> day:<日期>`：手動幫玩家報名某一天
+- `/admin_unsignup player:<玩家> day:<日期>`：手動取消玩家某一天報名
+- `/admin_test_signup player:<玩家> day:<日期>`：手動幫玩家加入測試報名某一天
+- `/admin_test_unsignup player:<玩家> day:<日期>`：手動取消玩家某一天的測試報名
+- `/admin_signup_access player:<玩家> blocked:<true|false>`：設定玩家能否自行報名
+- `/admin_grant player:<玩家>`：將已註冊玩家加入管理員
+- `/admin_revoke player:<玩家>`：移除動態管理員權限
 - `/admin_test_signup_post`：手動發送測試用報名表
 - `/admin_test_summary`：查看測試報名與分配輸出
+- `/admin_summary_image day:<日期>`：輸出正式報名的表格圖片
 - `/admin_test_summary_image day:<日期>`：輸出測試報名的表格圖片
+
+### 玩家查找規則
+
+- `player` 參數可接受 Discord `user ID`、`@mention`、`遊戲名稱`、`顯示名稱`
+- 若名稱重複，系統會提示候選名單，這時請改用 `user ID`
+- `admin_addplayer` 的 `user_id` 也可直接填 Discord `user ID` 或 `@mention`
+
+### 離開 Server 的玩家
+
+- 管理員指令不再依賴目前 server 成員清單
+- 只要玩家已存在於 `profiles.json`，即使已離開 server，仍可用 `/admin_profile`、`/admin_signup`、`/admin_unsignup`、`/admin_setrole` 等指令管理
+- 若玩家已離開 server、但尚未建檔，可先用 `/admin_addplayer user_id:<Discord ID> game_name:<遊戲名稱> display_name:<顯示名>` 建立資料，再進行報名操作
 
 ## 注意事項
 - 若你用 Windows 編輯 JSON，專案目前可容忍 UTF-8 BOM，不會因此讀取失敗。
